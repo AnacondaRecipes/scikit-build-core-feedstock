@@ -1,4 +1,4 @@
-python -m pip install . -vv
+python -m pip install . --no-deps --no-build-isolation -vv
 
 set ACTIVATE_DIR=%PREFIX%\etc\conda\activate.d
 set DEACTIVATE_DIR=%PREFIX%\etc\conda\deactivate.d
