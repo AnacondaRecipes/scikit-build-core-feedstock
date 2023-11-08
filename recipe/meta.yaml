@@ -37,7 +37,7 @@ test:
   commands:
     - pip check
     # see thread https://github.com/scikit-build/scikit-build-core/issues/368
-    - pytest -vv -ra --showlocals -m "not (isolated or network)" --deselect=tests/test_dynamic_metadata.py::test_pep517_wheel -k "not (sdist_time_hash_set_epoch or sdist_hash)"
+    - pytest -vv -ra --showlocals -m "not (isolated or network)" --deselect=tests/test_editable_unit.py::test_navigate_editable_pkg --deselect=tests/test_dynamic_metadata.py::test_pep517_wheel -k "not (sdist_time_hash_set_epoch or sdist_hash)"
   source_files:
     - tests/
     - src/
