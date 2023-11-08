@@ -1,5 +1,5 @@
 {% set name = "scikit-build-core" %}
-{% set version = "0.6.0" %}
+{% set version = "0.6.1" %}
 
 package:
   name: {{ name|lower }}
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/scikit_build_core-{{ version }}.tar.gz
-  sha256: 1bea5ed83610b367f3446badd996f2356690548188d6d38e5b93152df311a7ae
+  sha256: 392254a4ca7235c27a4be98cc24cd708f563171961ce37cff66120ebfda20b7a
 
 build:
   number: 0
@@ -25,18 +25,19 @@ requirements:
     - importlib_metadata         # [py<38]
     - importlib_resources >=1.3  # [py<39]
     - packaging >=20.9
-    - pyproject-metadata >=0.5
     - tomli >=1.1                # [py<311]
     - typing-extensions >=3.10   # [py<38]
   run_constrained:
     - pathspec >=0.10.1
+    - pyproject-metadata >=0.5
 
 test:
   imports:
     - scikit_build_core
   commands:
     - pip check
-    - pytest -vv -m "not isolated" -k "not sdist_time_hash_set_epoch and not sdist_hash"
+    # see thread https://github.com/scikit-build/scikit-build-core/issues/368
+    - pytest -vv -ra --showlocals -m "not (isolated or network)" -k "not (sdist_time_hash_set_epoch or sdist_hash)"
   source_files:
     - tests/
     - src/
@@ -51,10 +52,13 @@ test:
     - hatchling
     - make
     - ninja
+    - numpy
     - pip
+    - pathspec >=0.10.1
     - pybind11
+    - pyproject-metadata >=0.5
     - pytest >=7.0
-    - pytest-subprocess
+    - pytest-subprocess >=1.5
     - rich
     - setuptools
     - virtualenv
