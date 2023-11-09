@@ -50,7 +50,7 @@ test:
     - cmake
     - hatch-vcs
     - hatchling
-    - make
+    - make  # [unix]
     - ninja
     - numpy
     - pip
