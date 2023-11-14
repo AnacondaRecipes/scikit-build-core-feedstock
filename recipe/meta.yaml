@@ -22,7 +22,7 @@ requirements:
   run:
     - python
     - exceptiongroup             # [py<311]
-    - importlib_metadata         # [py<38]
+    - importlib-metadata         # [py<38]
     - importlib_resources >=1.3  # [py<39]
     - packaging >=20.9
     - tomli >=1.1                # [py<311]
