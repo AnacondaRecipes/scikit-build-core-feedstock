@@ -10,7 +10,7 @@ source:
   sha256: 392254a4ca7235c27a4be98cc24cd708f563171961ce37cff66120ebfda20b7a
 
 build:
-  number: 0
+  number: 1
   skip: true  # [py<37]
 
 requirements:
@@ -27,7 +27,9 @@ requirements:
     - packaging >=20.9
     - tomli >=1.1                # [py<311]
     - typing-extensions >=3.10   # [py<38]
-  run_constrained:
+    # pathspec and pyproject-metadata are actually required because
+    # injected at runtime:
+    # https://github.com/scikit-build/scikit-build-core/blob/d7ba004/src/scikit_build_core/build/__init__.py#L113
     - pathspec >=0.10.1
     - pyproject-metadata >=0.5
 
