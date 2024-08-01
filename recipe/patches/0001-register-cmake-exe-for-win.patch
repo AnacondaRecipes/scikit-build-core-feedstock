@@ -1,0 +1,51 @@
+From e3b6c5bc4fe47fdb8d1fab5b070f4e29f04b3921 Mon Sep 17 00:00:00 2001
+From: Lorenzo Pirritano <lpirritano@anaconda.com>
+Date: Thu, 1 Aug 2024 20:04:24 +0200
+Subject: [PATCH] register cmake exe for win
+
+The parameters used in these tests have a lot of \ that
+become \\ in Windows, probably the three tests fail for
+this reason, as not requiring the exact parameters work
+for Windows (using fp.any()).
+
+See usage of pytest-subprocess here:
+https://pytest-subprocess.readthedocs.io/en/latest/usage.html
+
+See non-exact command matching with pytest-subprocess here:
+https://pytest-subprocess.readthedocs.io/en/latest/usage.html#non-exact-command-matching
+
+---
+ tests/test_cmake_config.py | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/tests/test_cmake_config.py b/tests/test_cmake_config.py
+index ddc170a..1300d55 100644
+--- a/tests/test_cmake_config.py
++++ b/tests/test_cmake_config.py
+@@ -54,6 +54,7 @@ def test_init_cache(fp, tmp_path):
+     cmd = list(configure_args(config, init=True))
+     print("Registering: cmake", *cmd)
+     fp.register([fp.program("cmake"), *cmd])
++    fp.register([fp.program("cmake"), fp.any()])
+     fp.register([fp.program("cmake3"), *cmd])
+     config.configure()
+ 
+@@ -108,6 +109,7 @@ def test_cmake_args(tmp_path, fp):
+     cmd.append("-DSOMETHING=one")
+     print("Registering: cmake", *cmd)
+     fp.register([fp.program("cmake"), *cmd])
++    fp.register([fp.program("cmake"), fp.any()])
+     fp.register([fp.program("cmake3"), *cmd])
+ 
+     config.configure(cmake_args=["-DSOMETHING=one"])
+@@ -138,6 +140,7 @@ def test_cmake_paths(tmp_path, fp):
+     cmd = list(configure_args(config))
+     print("Registering: cmake", *cmd)
+     fp.register([fp.program("cmake"), *cmd])
++    fp.register([fp.program("cmake"), fp.any()])
+     fp.register([fp.program("cmake3"), *cmd])
+ 
+     config.configure()
+-- 
+2.39.1
+

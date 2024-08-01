@@ -8,12 +8,16 @@ package:
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/scikit_build_core-{{ version }}.tar.gz
   sha256: c8ff2582f94d2d9e650a9869015704e77c35baf691b6228ce87fd062a21063b1
+  patches:                                           # [win]
+    - patches/0001-register-cmake-exe-for-win.patch  # [win]
 
 build:
   number: 0
   skip: true  # [py<37]
 
 requirements:
+  build:
+    - m2-patch  # [win]
   host:
     - hatch-vcs
     - hatchling
@@ -44,8 +48,6 @@ requirements:
 {% set markers_to_skip = "isolated or network or virtualenv or setuptools or broken_on_urct" %}
 
 {% set tests_to_skip = "sdist_time_hash_set_epoch or sdist_hash" %}
-# skip these on win because pytest-subprocess not able to register make.exe fails with ProcessNotRegisteredError
-{% set tests_to_skip = tests_to_skip + " or test_cmake_paths or test_init_cache or test_cmake_args" %}  # [win]
 
 test:
   imports:
@@ -54,7 +56,7 @@ test:
     - pip check
     - set CMAKE_GENERATOR=Ninja  # [win]
     # see thread https://github.com/scikit-build/scikit-build-core/issues/368
-    - pytest -vv -ra --showlocals -m "not ({{markers_to_skip}})" {{tests_to_deselect}} -k "not ({{tests_to_skip}})"
+    - pytest -vv -ra --showlocals -m "not ({{ markers_to_skip }})" {{ tests_to_deselect }} -k "not ({{ tests_to_skip }})"
   source_files:
     - tests/
     - src/
