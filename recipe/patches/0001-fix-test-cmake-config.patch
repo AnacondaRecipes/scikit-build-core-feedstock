@@ -1,34 +1,25 @@
-From 8150ae53f5f670eb4b00f57020d4433141ff890c Mon Sep 17 00:00:00 2001
+From d76be2b01e920230d06a405529fbc9e79908d8c8 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pirritano <lpirritano@anaconda.com>
-Date: Sun, 4 Aug 2024 13:38:09 +0200
+Date: Sun, 4 Aug 2024 15:00:26 +0200
 Subject: [PATCH] fix test cmake config
 
 ---
- tests/test_cmake_config.py | 116 +++++++++++++++++++++++++++++++------
- 1 file changed, 98 insertions(+), 18 deletions(-)
+ tests/test_cmake_config.py | 88 ++++++++++++++++++++++++++++++++------
+ 1 file changed, 76 insertions(+), 12 deletions(-)
 
 diff --git a/tests/test_cmake_config.py b/tests/test_cmake_config.py
-index ddc170a..173c004 100644
+index ddc170a..7df0eaa 100644
 --- a/tests/test_cmake_config.py
 +++ b/tests/test_cmake_config.py
-@@ -1,7 +1,9 @@
- from __future__ import annotations
+@@ -2,6 +2,7 @@ from __future__ import annotations
  
-+import importlib
  import os
  import shutil
 +import sysconfig
  from pathlib import Path
  from typing import TYPE_CHECKING
  
-@@ -9,20 +11,61 @@ import pytest
- from packaging.specifiers import SpecifierSet
- from packaging.version import Version
- 
-+from scikit_build_core import cmake
- from scikit_build_core.cmake import CMake, CMaker
- from scikit_build_core.errors import CMakeNotFoundError
- 
+@@ -15,14 +16,49 @@ from scikit_build_core.errors import CMakeNotFoundError
  if TYPE_CHECKING:
      from collections.abc import Generator
  
@@ -38,36 +29,31 @@ index ddc170a..173c004 100644
  
  
 -def configure_args(config: CMaker, *, init: bool = False) -> Generator[str, None, None]:
-+def get_cmake_configure_test_parameters() -> (
-+    tuple[tuple[str, str, str], list[ParameterSet]]
-+):
-+    return ("platform_system", "generator", "single_config"), [
-+        pytest.param("win", None, False, id="only_win_round"),
-+        pytest.param("win", "Ninja", True, id="win_ninja_round"),
-+        pytest.param("win", "Makefiles", True, id="win_makefiles_round"),
-+        pytest.param("win", "Others", False, id="win_others_round"),
-+        pytest.param("linux", None, True, id="only_linux_round"),
-+        pytest.param("linux", "Ninja", True, id="linux_ninja_round"),
++def get_cmake_configure_test_parameters() -> tuple[tuple[str, str], list[ParameterSet]]:
++    win_marks = []
++    linux_or_darwin_marks = []
++    if sysconfig.get_platform().startswith("win"):
++        linux_or_darwin_marks = [pytest.mark.skip(reason="run only on Linux/Darwin")]
++    else:
++        win_marks = [pytest.mark.skip(reason="run only on Windows")]
++    return ("generator", "single_config"), [
++        # windows
++        pytest.param(None, False, marks=win_marks, id="only_win_round"),
++        pytest.param("Ninja", True, marks=win_marks, id="win_ninja_round"),
++        pytest.param("Makefiles", True, marks=win_marks, id="win_makefiles_round"),
++        pytest.param("Others", False, marks=win_marks, id="win_others_round"),
++        # linux or darwin
++        pytest.param(None, True, marks=linux_or_darwin_marks, id="only_linux_round"),
++        pytest.param(
++            "Ninja", True, marks=linux_or_darwin_marks, id="linux_ninja_round"
++        ),
 +    ]
 +
 +
 +def configure_cmake_configure_test(
-+    platform_system: str,
 +    generator: str | None,
 +    monkeypatch: pytest.MonkeyPatch,
 +) -> None:
-+    # CMaker::single_config is initialized with
-+    # not sysconfig.get_platform().startswith("win")
-+    monkeypatch.setattr(
-+        sysconfig,
-+        "get_platform",
-+        lambda: platform_system,
-+    )
-+    # we need to reload the module and later in
-+    # the test use its class cmake.CMaker, and not
-+    # the global CMaker which is not mocked
-+    importlib.reload(cmake)
-+
 +    if generator is None:
 +        monkeypatch.delenv("CMAKE_GENERATOR", raising=False)
 +    else:
@@ -85,14 +71,13 @@ index ddc170a..173c004 100644
          yield f"-DCMAKE_BUILD_TYPE:STRING={config.build_type}"
  
      if init:
-@@ -31,7 +74,15 @@ def configure_args(config: CMaker, *, init: bool = False) -> Generator[str, None
+@@ -31,7 +67,14 @@ def configure_args(config: CMaker, *, init: bool = False) -> Generator[str, None
  
  
  @pytest.mark.configure()
 -def test_init_cache(fp, tmp_path):
 +@pytest.mark.parametrize(*get_cmake_configure_test_parameters())
 +def test_init_cache(
-+    platform_system: str,
 +    generator: str,
 +    single_config: bool,
 +    tmp_path: Path,
@@ -102,24 +87,20 @@ index ddc170a..173c004 100644
      fp.register(
          [fp.program("cmake"), "-E", "capabilities"],
          stdout='{"version":{"string":"3.14.0"}}',
-@@ -41,9 +92,13 @@ def test_init_cache(fp, tmp_path):
+@@ -41,9 +84,11 @@ def test_init_cache(fp, tmp_path):
          stdout='{"version":{"string":"3.14.0"}}',
      )
  
--    config = CMaker(
--        CMake.default_search(),
--        source_dir=DIR / "packages/simple_pure",
-+    # this also reloads the cmake module
-+    configure_cmake_configure_test(platform_system, generator, monkeypatch)
++    configure_cmake_configure_test(generator, monkeypatch)
 +
-+    # use cmake.CMaker, and not the global CMaker which is not mocked
-+    config = cmake.CMaker(
-+        cmake.CMake.default_search(),
+     config = CMaker(
+         CMake.default_search(),
+-        source_dir=DIR / "packages/simple_pure",
 +        source_dir=DIR / "packages" / "simple_pure",
          build_dir=tmp_path / "build",
          build_type="Release",
      )
-@@ -51,7 +106,7 @@ def test_init_cache(fp, tmp_path):
+@@ -51,7 +96,7 @@ def test_init_cache(fp, tmp_path):
          {"SKBUILD": True, "SKBUILD_VERSION": "1.0.0", "SKBUILD_PATH": config.source_dir}
      )
  
@@ -128,14 +109,13 @@ index ddc170a..173c004 100644
      print("Registering: cmake", *cmd)
      fp.register([fp.program("cmake"), *cmd])
      fp.register([fp.program("cmake3"), *cmd])
-@@ -87,7 +142,15 @@ def test_too_old(fp, monkeypatch):
+@@ -87,7 +132,14 @@ def test_too_old(fp, monkeypatch):
  
  
  @pytest.mark.configure()
 -def test_cmake_args(tmp_path, fp):
 +@pytest.mark.parametrize(*get_cmake_configure_test_parameters())
 +def test_cmake_args(
-+    platform_system: str,
 +    generator: str,
 +    single_config: bool,
 +    tmp_path: Path,
@@ -145,19 +125,15 @@ index ddc170a..173c004 100644
      fp.register(
          [fp.program("cmake"), "-E", "capabilities"],
          stdout='{"version":{"string":"3.15.0"}}',
-@@ -97,26 +160,39 @@ def test_cmake_args(tmp_path, fp):
+@@ -97,26 +149,36 @@ def test_cmake_args(tmp_path, fp):
          stdout='{"version":{"string":"3.15.0"}}',
      )
  
--    config = CMaker(
--        CMake.default_search(),
--        source_dir=DIR / "packages/simple_pure",
-+    # this also reloads the cmake module
-+    configure_cmake_configure_test(platform_system, generator, monkeypatch)
++    configure_cmake_configure_test(generator, monkeypatch)
 +
-+    # use cmake.CMaker, and not the global CMaker which is not mocked
-+    config = cmake.CMaker(
-+        cmake.CMake.default_search(),
+     config = CMaker(
+         CMake.default_search(),
+-        source_dir=DIR / "packages/simple_pure",
 +        source_dir=DIR / "packages" / "simple_pure",
          build_dir=tmp_path / "build",
          build_type="Release",
@@ -181,7 +157,6 @@ index ddc170a..173c004 100644
 -def test_cmake_paths(tmp_path, fp):
 +@pytest.mark.parametrize(*get_cmake_configure_test_parameters())
 +def test_cmake_paths(
-+    platform_system: str,
 +    generator: str,
 +    single_config: bool,
 +    tmp_path: Path,
@@ -191,19 +166,15 @@ index ddc170a..173c004 100644
      fp.register(
          [fp.program("cmake"), "-E", "capabilities"],
          stdout='{"version":{"string":"3.15.0"}}',
-@@ -126,16 +202,20 @@ def test_cmake_paths(tmp_path, fp):
+@@ -126,16 +188,18 @@ def test_cmake_paths(tmp_path, fp):
          stdout='{"version":{"string":"3.15.0"}}',
      )
  
--    config = CMaker(
--        CMake.default_search(),
--        source_dir=DIR / "packages/simple_pure",
-+    # this also reloads the cmake module
-+    configure_cmake_configure_test(platform_system, generator, monkeypatch)
++    configure_cmake_configure_test(generator, monkeypatch)
 +
-+    # use cmake.CMaker, and not the global CMaker which is not mocked
-+    config = cmake.CMaker(
-+        cmake.CMake.default_search(),
+     config = CMaker(
+         CMake.default_search(),
+-        source_dir=DIR / "packages/simple_pure",
 +        source_dir=DIR / "packages" / "simple_pure",
          build_dir=tmp_path / "build",
          build_type="Release",
