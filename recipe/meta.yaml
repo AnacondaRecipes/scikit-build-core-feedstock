@@ -8,8 +8,8 @@ package:
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/scikit_build_core-{{ version }}.tar.gz
   sha256: 64880e00c03e196ed2feb66676175dbbafe5fad1081edd9583c30bf6170d2fc9
-  patches:                                          
-    - patches/0001-register-cmake-exe-for-win.patch  # [win]
+  patches:
+    - patches/0001-fix-test-cmake-config.patch
     - patches/0002-pyproject-metadata-fix.patch
 
 build:
@@ -18,8 +18,8 @@ build:
 
 requirements:
   build:
+    - patch     # [not win]
     - m2-patch  # [win]
-    - patch     # [unix]
   host:
     - hatch-vcs
     - hatchling
@@ -49,6 +49,7 @@ requirements:
 
 {% set markers_to_skip = "isolated or network or virtualenv or setuptools or broken_on_urct" %}
 
+# see thread https://github.com/scikit-build/scikit-build-core/issues/368
 {% set tests_to_skip = "sdist_time_hash_set_epoch or sdist_hash" %}
 
 test:
@@ -56,8 +57,7 @@ test:
     - scikit_build_core
   commands:
     - pip check
-    - set CMAKE_GENERATOR=Ninja
-    # see thread https://github.com/scikit-build/scikit-build-core/issues/368
+    - set CMAKE_GENERATOR=Ninja  # [win]
     - pytest -vv -ra --showlocals -m "not ({{ markers_to_skip }})" {{ tests_to_deselect }} -k "not ({{ tests_to_skip }})"
   source_files:
     - tests/
