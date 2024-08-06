@@ -57,7 +57,7 @@ test:
     - scikit_build_core
   commands:
     - pip check
-    # - set CMAKE_GENERATOR=Ninja  # [win]
+    - set CMAKE_GENERATOR=Ninja  # [win]
     - pytest -vv -ra --showlocals -m "not ({{ markers_to_skip }})" {{ tests_to_deselect }} -k "not ({{ tests_to_skip }})"
   source_files:
     - tests/
