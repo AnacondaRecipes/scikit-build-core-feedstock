@@ -10,7 +10,6 @@ source:
   sha256: eee0d0f43319117ff98368a9d572ebdd0880481eabe19a4a1a77455df73ffbaf
   patches:
     - patches/0001-fix-test-cmake-config.patch
-    - patches/0002-pyproject-metadata-fix.patch
 
 build:
   number: 0
