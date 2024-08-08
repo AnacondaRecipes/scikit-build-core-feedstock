@@ -1,5 +1,5 @@
 {% set name = "scikit-build-core" %}
-{% set version = "0.9.10" %}
+{% set version = "0.10.1" %}
 
 package:
   name: {{ name|lower }}
@@ -7,9 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/scikit_build_core-{{ version }}.tar.gz
-  sha256: eee0d0f43319117ff98368a9d572ebdd0880481eabe19a4a1a77455df73ffbaf
-  patches:
-    - patches/0001-fix-test-cmake-config.patch
+  sha256: b256805c75accc9f7ecd2d94e85d5e470b1cc325612978b7480b277da3ab34ff
 
 build:
   number: 0
