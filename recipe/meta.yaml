@@ -17,14 +17,13 @@ build:
 
 requirements:
   host:
-    - hatch-vcs
-    - hatchling
-    - pip
     - python
+    - pip
+    - hatchling
+    - hatch-vcs
   run:
     - python
     - exceptiongroup >=1.0              # [py<311]
-    # importlib-resources
     - importlib_resources >=1.3         # [py<39]
     - packaging >=23.2
     - pathspec >=0.10.1
@@ -58,23 +57,28 @@ test:
   requires:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python-build
-    - cattrs >=22.2
+    - {{ stdlib('c') }}
+    - python-build >=0.8
+    - cattrs >=22.2.0
+    - pybind11 >=2.11
+    - pytest >=7.2
+    - pytest-subprocess >=1.5
+    - setuptools >=43    # [py<39]
+    - setuptools >=45    # [py==39]
+    - setuptools >=49    # [py>=310 and py<312]
+    - setuptools >=66.1  # [py>=312]
+    - virtualenv >=20.20
+    - wheel >=0.40
+
     - cmake
     - hatch-vcs
-    - hatchling
+    - hatchling >=1.24.0
     - make  # [unix]
     - ninja
     - numpy
     - pip
-    - pybind11 >=2.11
     - pyproject-metadata >=0.5
-    - pytest >=7.2
-    - pytest-subprocess >=1.5
     - rich
-    - setuptools
-    - virtualenv >=20.20
-    - wheel >=0.40
 
 about:
   home: https://github.com/scikit-build/scikit-build-core
