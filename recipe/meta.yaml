@@ -31,7 +31,6 @@ requirements:
     - typing-extensions >=3.10.0        # [py<39]
 
 {% set tests_to_deselect = "" %}
-{% set tests_to_deselect = tests_to_deselect + "--deselect=tests/test_editable_unit.py::test_navigate_editable_pkg" %}
 # deselect these tests on win with symlink privileges OSError: [WinError 1314]
 {% set tests_to_deselect = tests_to_deselect + " --deselect=tests/test_file_processor.py::test_on_each_with_symlink" %}           # [win]
 # deselect these tests on win while build_wheel and build_editable
