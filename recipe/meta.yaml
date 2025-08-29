@@ -64,20 +64,22 @@ test:
     - pytest >=7.2
     - pytest-subprocess >=1.5
     - setuptools >=43    # [py<39]
-    - setuptools >=45    # [py==39]
+    - setuptools >=45    # [py>=39 and py<310]
     - setuptools >=49    # [py>=310 and py<312]
     - setuptools >=66.1  # [py>=312]
     - virtualenv >=20.20
     - wheel >=0.40
 
-    - cmake
-    - hatch-vcs
     - hatchling >=1.24.0
+
+    - cmake
     - make  # [unix]
-    - ninja
+    - ninja  # [not win]
+    
     - numpy
+
     - pip
-    - pyproject-metadata >=0.5
+
     - rich
 
 about:
