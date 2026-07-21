@@ -1,13 +1,20 @@
 {% set name = "scikit-build-core" %}
-{% set version = "0.12.2" %}
+{% set version = "1.0.3" %}
+{% set tests_to_deselect = "" %}
+{% set tests_to_deselect = 'tests_to_deselect + " --deselect=tests/test_file_processor.py::test_on_each_with_symlink"' %}  # [win]
+{% set tests_to_deselect = 'tests_to_deselect + " --deselect=tests/test_pyproject_extra_dirs.py::test_pep517_wheel_extra_dirs"' %}  # [win]
+{% set tests_to_deselect = 'tests_to_deselect + " --deselect=tests/test_pyproject_pep660.py::test_pep660_wheel"' %}  # [win]
+{% set markers_to_skip = "isolated or network or virtualenv or setuptools or broken_on_urct" %}
 
+# deselect these tests on win with symlink privileges OSError: [WinError 1314]
+# deselect these tests on win while build_wheel and build_editable
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name.replace('-', '_')}}-{{ version }}.tar.gz
-  sha256: 562e0bbc9de1a354c87825ccf732080268d6582a0200f648e8c4a2dcb1e3736d
+  sha256: a4d7a05978ee37975c37743510c8991e2debce7ef83afb0a07c0c576fd4f16e8
 
 build:
   number: 0
@@ -27,15 +34,10 @@ requirements:
     - pathspec >=0.12.0
     - tomli >=1.2.2  # [py<311]
     - typing-extensions >=4  # [py<311]
-
-{% set tests_to_deselect = "" %}
-# deselect these tests on win with symlink privileges OSError: [WinError 1314]
-{% set tests_to_deselect = tests_to_deselect + " --deselect=tests/test_file_processor.py::test_on_each_with_symlink" %}           # [win]
-# deselect these tests on win while build_wheel and build_editable
-{% set tests_to_deselect = tests_to_deselect + " --deselect=tests/test_pyproject_extra_dirs.py::test_pep517_wheel_extra_dirs" %}  # [win]
-{% set tests_to_deselect = tests_to_deselect + " --deselect=tests/test_pyproject_pep660.py::test_pep660_wheel" %}                 # [win]
-
-{% set markers_to_skip = "isolated or network or virtualenv or setuptools or broken_on_urct" %}
+    - importlib-resources >=1.3  # [py<39]
+    - typing_extensions >=4  # [py<311]
+  run_constrained:
+    - hatchling >=1.24
 
 test:
   imports:
@@ -57,9 +59,9 @@ test:
     - pybind11 >=2.11
     - pytest >=7.2
     - pytest-subprocess >=1.5
-    - setuptools >=43    # [py<39]
-    - setuptools >=45    # [py>=39 and py<310]
-    - setuptools >=49    # [py>=310 and py<312]
+    - setuptools >=43  # [py<39]
+    - setuptools >=45  # [py>=39 and py<310]
+    - setuptools >=49  # [py>=310 and py<312]
     - setuptools >=66.1  # [py>=312]
     - virtualenv >=20.20
     - wheel >=0.40
@@ -74,8 +76,8 @@ about:
   home: https://github.com/scikit-build/scikit-build-core
   summary: Build backend for CMake based projects
   description: |
-    Scikit-build-core is a ground-up rewrite of the classic Scikit-build, a bridge 
-    between Python package build systems and CMake, the most popular compiled language 
+    Scikit-build-core is a ground-up rewrite of the classic Scikit-build, a bridge
+    between Python package build systems and CMake, the most popular compiled language
     build system.
   license: Apache-2.0
   license_family: Apache
