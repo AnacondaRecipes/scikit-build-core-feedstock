@@ -49,6 +49,8 @@ test:
     - pyproject.toml
   commands:
     - pip check
+    - scikit-build --help
+    - scikit-build-core --help
     # Ninja generators do not support the Visual Studio-specific platform and
     # toolset values inherited from the Windows conda build environment.
     - set CMAKE_GENERATOR_PLATFORM=  # [win]
