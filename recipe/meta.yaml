@@ -1,13 +1,13 @@
 {% set name = "scikit-build-core" %}
-{% set version = "0.12.2" %}
+{% set version = "1.0.3" %}
 
 package:
-  name: {{ name|lower }}
+  name: {{ name }}
   version: {{ version }}
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name.replace('-', '_')}}-{{ version }}.tar.gz
-  sha256: 562e0bbc9de1a354c87825ccf732080268d6582a0200f648e8c4a2dcb1e3736d
+  sha256: a4d7a05978ee37975c37743510c8991e2debce7ef83afb0a07c0c576fd4f16e8
 
 build:
   number: 0
@@ -46,29 +46,45 @@ test:
     - pyproject.toml
   commands:
     - pip check
+    # Ninja generators do not support the Visual Studio-specific platform and
+    # toolset values inherited from the Windows conda build environment.
+    - set CMAKE_GENERATOR_PLATFORM=  # [win]
+    - set CMAKE_GENERATOR_TOOLSET=   # [win]
+    # Prevent conda's setuptools-scm activation hook from overriding versions
+    # derived from temporary Git repositories created by the tests.
+    - unset SETUPTOOLS_SCM_PRETEND_VERSION  # [osx]
     - pytest -vv -ra --showlocals -m "not ({{ markers_to_skip }})" {{ tests_to_deselect }}
   requires:
-    - pip
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - {{ stdlib('c') }}
+    # test-core
     - python-build >=0.8
-    - cattrs >=22.2.0
-    - pybind11 >=2.11
-    - pytest >=7.2
+    - cattrs >=22.2
+    - filelock >=3.8
+    - hatchling >=1.24
+    - hatch-vcs >=0.4
+    - pip >=23  # [py<313]
+    - pip >=24.1  # [py>=313]
+    - pytest >=7.2,!=9.1.0
     - pytest-subprocess >=1.5
     - setuptools >=43    # [py<39]
-    - setuptools >=45    # [py>=39 and py<310]
+    - setuptools >=45    # [py==39]
     - setuptools >=49    # [py>=310 and py<312]
     - setuptools >=66.1  # [py>=312]
     - virtualenv >=20.20
     - wheel >=0.40
-    - hatchling >=1.24.0
+    # test-meta
+    - hatch-fancy-pypi-readme >=23.2
+    - setuptools-scm >=5
+    # test-numpy
+    - numpy
+    # test-pybind11
+    - pybind11 >=2.11
+    # Build tools required by the selected tests
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - {{ stdlib("c") }}
     - cmake
     - make  # [unix]
     - ninja-base  # [not win]
-    - numpy
-    - rich
 
 about:
   home: https://github.com/scikit-build/scikit-build-core
@@ -90,5 +106,5 @@ extra:
     - jcfr
     - thewtex
   skip-lints:
-    # uses hatchling
-    - missing_wheel
+    # pip is present in test requirements with upstream Python-specific constraints.
+    - missing_test_requirement_pip
