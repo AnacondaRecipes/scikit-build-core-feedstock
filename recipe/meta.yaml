@@ -12,6 +12,9 @@ source:
 build:
   number: 0
   skip: true  # [py<38]
+  entry_points:
+    - scikit-build = scikit_build_core.__main__:main
+    - scikit-build-core = scikit_build_core.__main__:main
 
 requirements:
   host:
